@@ -1,0 +1,23 @@
+{
+  "name": "hackday2018",
+  "version": "1.0.0",
+  "description": "Repo for hackathon entry",
+  "main": "courseSchedule.js",
+  "dependencies": {
+    "express": "^4.16.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Brian-Quach/HackDay2018.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Brian-Quach/HackDay2018/issues"
+  },
+  "homepage": "https://github.com/Brian-Quach/HackDay2018#readme"
+}
