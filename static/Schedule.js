@@ -26,10 +26,21 @@ const Weekdays = {
 function TimeTable(){
     this.TimeSlots = Array(120).fill(true);
     this.CourseSelection = [];
+    this.isValid = true;
 
     this.isFree = function(timeSlot){
         return this.TimeSlots[timeSlot];
     };
+
+    this.addClass = function(classSession){
+        //ClassSession is a Class() object
+        this.CourseSelection.push(classSession);
+
+        for (let time=classSession.start ; time < classSession.end ; time++){
+            this.TimeSlots[time] = false;
+        }
+
+    }
 }
 
 function getSlotIndex(day, hour){
@@ -87,14 +98,51 @@ function Class(courseCode, sessionCode, start, end){
 
 let coursesSelected = [];
 
-let timeTables = {};
+let timeTables = [];
 
 function getAllTimetables(classes){
     // classes - [{session1, session2....}]
     // Does the actual scheduling, return list of valid timetables
     for (let i = 0; i < classes.length; i++) {
         if (i === 0){
+            // Create new timetables b/c none exist
+            for (let j =0; j < classes[0].length; j++){
+                let newTimeTable = new TimeTable();
+                newTimeTable.addClass(classes[0][j]);
+                timeTables.push(newTimeTable);
+            }
+        } else {
+            let oldLen = timeTables.length;
+            timeTables = repeatArray(timeTables, classes[i]);
+            for (let j =0; j < classes[i].length; j++){
+                for (let k=j*oldLen; k<(j+1)*oldLen; k++){
+                    if (timeTables[k].isValid){
+                        for (let tslot = classes[i][j].start; tslot < classes[i][j].end; tslot++){
+                            if (!timeTables[k].isFree(tslot)){
+                                timeTables[k].isValid = false;
+                            }
+                        }
+                        if (timeTables[k].isValid){
+                            timeTables[k].addClass(classes[i][j]);
+                        }
+                    }
+                }
+            }
 
+            // Remove invaild crap
+            for (let i = timeTables.length-1; i >= 0; i--) {
+                if (!timeTables.isValid) {
+                    timeTables.splice(i, 1);
+                }
+            }
         }
     }
+}
+
+function repeatArray(array, n){
+    let out = [];
+    for(let i = 0; i < n; i++) {
+        out = out.concat(array);
+    }
+    return out;
 }
