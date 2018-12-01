@@ -459,3 +459,7 @@ tr td:hover { background: #666; color: #FFF; }
   color:white;
   vertical-align: bottom;
 }
+
+.courseSearch{
+  color: black;
+}

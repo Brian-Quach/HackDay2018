@@ -13,16 +13,6 @@ function send(method, url, data, callback){
     }
 }
 
-
-const Weekdays = {
-    "MON" : 1,
-    "TUE" : 2,
-    "WED" : 3,
-    "THU" : 4,
-    "FRI" : 5
-};
-
-
 function TimeTable(){
     this.TimeSlots = Array(120).fill(true);
     this.CourseSelection = [];
@@ -53,8 +43,10 @@ function getSlotIndex(day, hour){
 }
 
 
-function Course(code){
+function Course(code, campus, term){
     this.code = code;
+    this.campus = campus;
+    this.term = term;
     this.lectures = [];
     this.tutorials = [];
     this.practicals = [];
@@ -91,12 +83,91 @@ function Class(courseCode, sessionCode, start, end){
     // Calling class but also gonna be used to represent filled timeslots
     this.courseCode = courseCode;
     this.sessionCode = sessionCode;
-    this.start = start;
+    this.start = end;
     this.end = end;
-    this.duration = end-start;
 }
 
-let coursesSelected = [];
+
+function courseToString(course){
+    let out = "";
+    out += course.name;
+    out += " (" + course.code + ") at ";
+    out += course.campus + " in " + course.term;
+
+    return out;
+}
+
+function printCourseResults(courses){
+    // Makes printing less ugly
+    let out = {};
+    for (i = 0; i < courses.length; i++) {
+        out[courses[i].id] = courseToString(courses[i]);
+    }
+    return out;
+}
+
+
+function getCourses(page=1, search=""){
+    return new Promise((resolve, reject) =>{
+            if (search === ""){
+                send("GET", "/api/getCourses/"+page, null, function(err, result){
+                    resolve(result);
+                })
+            } else {
+                send("GET", "/api/searchCourses/"+page+'/'+search, null, function(err, result){
+                    resolve(result);
+                })
+            }
+
+        }
+    )
+}
+
+const DAY_MAP = {
+    "MONDAY": 1,
+    "TUESDAY": 2,
+    "WEDNESDAY": 3,
+    "THURSDAY": 4,
+    "FRIDAY": 5
+}
+
+function parseCourses(courses){
+    for (let i = 0 ; i < courses.length; i++){
+        let newCourse = new Course(courses[i].code, courses[i].campus, courses[i].term);
+        console.log(courses[i].meeting_sections.length);
+        for (let j = 0 ; j < courses[i].meeting_sections.length; j++){
+            let section = courses[i].meeting_sections[j];
+            let sectionCode = section.code;
+
+            let start = [];
+            let end = [];
+            for (let k = 0; k < section.length; k++){
+                console.log("DAYYYY");
+                console.log(DAY_MAP[section.day]);
+                console.log(section.start/3600);
+                start.push(getSlotIndex(DAY_MAP[section.day] ,section.start/3600));
+                end.push(getSlotIndex(DAY_MAP[section.day] ,section.end/3600));
+            }
+
+            let meeting = new Class(courses[i].code, sectionCode, start, end);
+
+            if (sectionCode.charAt(0) === "L"){
+                newCourse.addLecture(meeting);
+            } else if (sectionCode.charAt(0) === "T"){
+                newCourse.addTutorial(meeting);
+            } else if (sectionCode.charAt(0) === "P"){
+                newCourse.addPractical(meeting);
+
+            }
+        }
+        //console.log(JSON.stringify(newCourse));
+    }
+}
+
+
+
+
+
 
 let timeTables = [];
 
@@ -129,7 +200,7 @@ function getAllTimetables(classes){
                 }
             }
 
-            // Remove invaild crap
+            // Remove invalid crap
             for (let i = timeTables.length-1; i >= 0; i--) {
                 if (!timeTables.isValid) {
                     timeTables.splice(i, 1);
@@ -139,6 +210,7 @@ function getAllTimetables(classes){
     }
 }
 
+
 function repeatArray(array, n){
     let out = [];
     for(let i = 0; i < n; i++) {
@@ -146,3 +218,37 @@ function repeatArray(array, n){
     }
     return out;
 }
+
+let pageIndex = 1;
+
+let currentResults = [];
+
+async function displaySearchResults(index){
+    let query = document.getElementById("courseSearchQuery").value;
+    let output = await getCourses(index, query);
+    console.log(output);
+    currentResults = [];
+    currentResults = parseCourses(output);
+    output = JSON.stringify(output);
+    if (output === {}){
+        pageIndex = pageIndex -1;
+        displaySearchResults(pageIndex);
+    } else {
+        document.getElementById("courseSearch").innerText = JSON.stringify(printCourseResults(JSON.parse(output)))  ;
+    }
+}
+
+document.getElementById("searchGo").addEventListener("click", function(){
+    pageIndex = 1;
+    displaySearchResults(pageIndex);
+});
+
+document.getElementById("resultsNext").addEventListener("click", function(){
+    pageIndex = pageIndex + 1;
+    displaySearchResults(pageIndex);
+});
+
+document.getElementById("resultsPrev").addEventListener("click", function(){
+    if (pageIndex !== 1) pageIndex = pageIndex -1;
+    displaySearchResults(pageIndex);
+});
