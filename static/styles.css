@@ -221,6 +221,16 @@ _:-ms-input-placeholder, :root .demo-graph {
 
 li{padding-left: 10px;}
 
+#bottom{
+
+    position: fixed; 
+    background:gray; 
+    width:100%;
+    bottom:0;
+}
+
+
+
 /*-----------------------------------------------------------------------------------------------------*/
 
 
@@ -235,11 +245,13 @@ body {
 
 .day {
   width: 18%;
-  height: 100vh;
+  height: 125vh;
   float: left;
   background-color: #fff;
   background-image: linear-gradient(rgba(0,0,0,.08) 50%, transparent 50%);
-  background-size: 1px 20%;
+  background-size: 1px 12.86%;
+  background-repeat: repeat;
+  background-position-y: -3%;
 }
 
 .day.time { width: 10%; }
@@ -255,28 +267,50 @@ body {
 }
 
 .hour {
-  height: 10%;
+  height: 6.43%;
   background-color: rgba(52, 73, 94,0.9);
   font-size: 12px;
   text-align: center;
-  line-height: 10vh;
+  line-height: 6.43vh;
 }
 
 .class {
+  position: relative;
   width: 100%;
-  height: 15vh; /*90min*/
-  line-height: 15vh;
+  height: 6.43%; /*90min*/
+  line-height: 6.43vh;
   background-color: magenta;
   font-size: 2vw;
   font-weight: 300;
   padding-left: 10px;
+  text-align: center;
 }
 
-.class.short { height: 7.5vh; line-height: 7.5vh; } /* 45min class */
-.class.b15 { margin-top: 2.5vh; } /* after 15 min break */
-.class.b45 { margin-top: 7.5vh; } /* after 45 min break */
-.class.b90 { margin-top: 15vh; } /* after 2x45 min break */
-.class.b135 { margin-top: 22.5vh; } /* after 3x45 min break */
+.class.hour1{height: 6.43%;} /*CUSTOM */
+
+.class.hour2{ height: 12.86%;} /*CUSTOM */
+
+.class.hour3{ height: 19.29%;} /*CUSTOM */
+
+.class.gap0{margin-top:0%;} /*CUSTOM */
+.class.gap1{margin-top:25.72%;} /*CUSTOM */
+.class.gap2{margin-top:51.44%;} /*CUSTOM */
+.class.gap3{margin-top:77.16%;} /*CUSTOM */
+.class.gap4{margin-top:102.88%;} /*CUSTOM */
+.class.gap5{margin-top:128.6%;} /*CUSTOM */
+.class.gap6{margin-top:154.32%;} /*CUSTOM */
+.class.gap7{margin-top:180.04%;} /*CUSTOM */
+.class.gap8{margin-top:205.76%;} /*CUSTOM */
+.class.gap9{margin-top:231.48%;} /*CUSTOM */
+.class.gap10{margin-top:257.2%;} /*CUSTOM */
+.class.gap11{margin-top:282.92%;} /*CUSTOM */
+.class.gap12{margin-top:308.64%;} /*CUSTOM */
+
+.class.short { height: 6.43%; line-height: 6.43%; } /* 45min class */
+.class.b15 { margin-top: 6.43%; } /* after 15 min break */
+.class.b45 { margin-top: 6.43%; } /* after 45 min break */
+.class.b90 { margin-top: 6.43%; } /* after 2x45 min break */
+.class.b135 { margin-top: 6.43%; } /* after 3x45 min break */
 
 .green { background-color: #2ecc71; }
 .turquoise { background-color: #1abc9c; }
@@ -367,6 +401,7 @@ td, th {
     padding-bottom: 12px;
     text-align: left;
     background-color: #34495e;
+    color:black;
 }
 
 
@@ -374,6 +409,7 @@ td, th {
 th {
   display: table-cell;
   vertical-align: inherit;
+  color:white;
 }
 
 /* Cells in even rows (2,4,6...) are one color */        
@@ -460,6 +496,43 @@ tr td:hover { background: #666; color: #FFF; }
   vertical-align: bottom;
 }
 
-.courseSearch{
-  color: black;
+
+
+/* Style the buttons that are used to open and close the accordion panel */
+.accordion {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  outline: none;
+  transition: 0.4s;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active, .accordion:hover {
+  background-color: #ccc;
+}
+
+
+.panel {
+  padding: 0 18px;
+  background-color: white;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+}
+
+.accordion:after {
+  content: '\02795'; /* Unicode character for "plus" sign (+) */
+  font-size: 13px;
+  color: #777;
+  float: right;
+  margin-left: 5px;
+}
+
+.active:after {
+  content: "\2796"; /* Unicode character for "minus" sign (-) */
 }
