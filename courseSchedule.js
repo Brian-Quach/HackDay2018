@@ -46,34 +46,60 @@ app.get('/api/getCourses/:page', function (req, res, next) {
     });
 });
 
-app.get('/api/timetable/:courseid/:campus/:term/', function (req, res, next){
+function Query(courseCode, campus, term) {
+    return query = 'code\:"'+courseCode+'" AND campus\:"'+campus+'" AND term\:"'+term+'"';
+}
+app.get('/api/findCourse/:courseCode/:campus/:term/', function (req, res, next) {
     let url = API;
-    url += "courses/";
-    url += "?key=" + API_KEY;
+    url += "courses/filter?";
+    url += "key=" + API_KEY;
 
-    let courseId = req.params.courseid;
-    url += "&id=" + courseId;
-    let campus = req.params.campus;
     let term = (req.params.term).slice(0, 4) + " " + (req.params.term).slice(4);
+    url += "&q=" + Query(req.params.courseCode, req.params.campus, term);
 
     console.log(url);
-
     Request.get(url, (error, response, body) => {
         if(error) {
             return console.dir(error);
         }
-        let result = JSON.parse(body);
-
-        for (i = 0; i < result.length; i++) {
-            if ((result[i].term == term) && (result[i].campus == campus)){
-                let courseTimes = result[i].meeting_sections;
-                return res.json(courseTimes);
-            }
-        }
-        res.json("Could not find course");
+        res.json(JSON.parse(body));
     });
+});
 
-})
+app.get('/api/getCourse/:courseCode/:campus/:term/', function (req, res, next) {
+    let url = API;
+    url += "courses/filter?";
+    url += "key=" + API_KEY;
+
+    let term = (req.params.term).slice(0, 4) + " " + (req.params.term).slice(4);
+    url += "&q=" + Query(req.params.courseCode, req.params.campus, term);
+
+    console.log(url);
+    Request.get(url, (error, response, body) => {
+        if(error) {
+            return console.dir(error);
+        }
+        res.json(JSON.parse(body));
+    });
+});
+
+app.get('/api/timetable/:courseCode/:campus/:term/', function (req, res, next) {
+    let url = API;
+    url += "courses/filter?";
+    url += "key=" + API_KEY;
+
+    let term = (req.params.term).slice(0, 4) + " " + (req.params.term).slice(4);
+    url += "&q=" + Query(req.params.courseCode, req.params.campus, term);
+
+    console.log(url);
+    Request.get(url, (error, response, body) => {
+        if(error) {
+            return console.dir(error);
+        }
+        res.json(JSON.parse(body)[0].meeting_sections);
+    });
+});
+
 
 app.use(function (req, res, next){
     console.log("HTTP request", req.method, req.url, req.body);
