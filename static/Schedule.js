@@ -21,16 +21,19 @@ function TimeTable(){
     this.isFree = function(timeSlot){
         return this.TimeSlots[timeSlot];
     };
+}
 
-    this.addClass = function(classSession){
-        //ClassSession is a Class() object
-        this.CourseSelection.push(classSession);
 
-        for (let time=classSession.start ; time < classSession.end ; time++){
-            this.TimeSlots[time] = false;
-        }
+function addClass(tTable, classSession){
+    //ClassSession is a Class() object
 
+    for (let time=classSession.start ; time < classSession.end ; time++){
+        tTable.TimeSlots[time] = false;
     }
+
+    tTable.CourseSelection.push(classSession.courseCode);
+
+
 }
 
 function getSlotIndex(day, hour){
@@ -132,21 +135,19 @@ const DAY_MAP = {
 }
 
 function parseCourses(courses){
+    let currentResults = [];
     for (let i = 0 ; i < courses.length; i++){
         let newCourse = new Course(courses[i].code, courses[i].campus, courses[i].term);
-        console.log(courses[i].meeting_sections.length);
         for (let j = 0 ; j < courses[i].meeting_sections.length; j++){
             let section = courses[i].meeting_sections[j];
             let sectionCode = section.code;
+            let sectionTimes = section.times;
 
             let start = [];
             let end = [];
-            for (let k = 0; k < section.length; k++){
-                console.log("DAYYYY");
-                console.log(DAY_MAP[section.day]);
-                console.log(section.start/3600);
-                start.push(getSlotIndex(DAY_MAP[section.day] ,section.start/3600));
-                end.push(getSlotIndex(DAY_MAP[section.day] ,section.end/3600));
+            for (let k = 0; k < sectionTimes.length; k++){
+                start.push(getSlotIndex(DAY_MAP[sectionTimes[k].day] ,sectionTimes[k].start/3600));
+                end.push(getSlotIndex(DAY_MAP[sectionTimes[k].day] ,sectionTimes[k].end/3600));
             }
 
             let meeting = new Class(courses[i].code, sectionCode, start, end);
@@ -160,9 +161,11 @@ function parseCourses(courses){
 
             }
         }
-        //console.log(JSON.stringify(newCourse));
+        currentResults.push(newCourse);
     }
+    return currentResults;
 }
+
 
 
 
@@ -175,26 +178,36 @@ function getAllTimetables(classes){
     // classes - [{session1, session2....}]
     // Does the actual scheduling, return list of valid timetables
     for (let i = 0; i < classes.length; i++) {
+        // Loop through list of sessions
         if (i === 0){
             // Create new timetables b/c none exist
             for (let j =0; j < classes[0].length; j++){
                 let newTimeTable = new TimeTable();
-                newTimeTable.addClass(classes[0][j]);
+                let newClass = classes[0][j];
+                newClass.start = newClass.start[0];
+                newClass.end = newClass.end[0];
+                addClass(newTimeTable, newClass);
                 timeTables.push(newTimeTable);
             }
         } else {
             let oldLen = timeTables.length;
-            timeTables = repeatArray(timeTables, classes[i]);
+            timeTables = repeatArray(timeTables, classes[i].length);
+
             for (let j =0; j < classes[i].length; j++){
                 for (let k=j*oldLen; k<(j+1)*oldLen; k++){
                     if (timeTables[k].isValid){
-                        for (let tslot = classes[i][j].start; tslot < classes[i][j].end; tslot++){
-                            if (!timeTables[k].isFree(tslot)){
-                                timeTables[k].isValid = false;
+                        for (let tslot = 0; tslot < classes[i][j].start.length; tslot++){
+                            for (let t2slot = classes[i][j].start[tslot]; t2slot < classes[i][j].end[tslot]; t2slot++){
+                                if (!timeTables[k].isFree(t2slot)){
+                                    timeTables[k].isValid = false;
+                                }
                             }
                         }
                         if (timeTables[k].isValid){
-                            timeTables[k].addClass(classes[i][j]);
+                            let newClass = classes[i][j];
+                            newClass.start = newClass.start[k];
+                            newClass.end = newClass.end[k];
+                            addClass(timeTables[k], classes[i][j]);
                         }
                     }
                 }
@@ -224,9 +237,8 @@ let pageIndex = 1;
 let currentResults = [];
 
 async function displaySearchResults(index){
-    let query = document.getElementById("courseSearchQuery").value;
+    let query = document.getElementById("search").value;
     let output = await getCourses(index, query);
-    console.log(output);
     currentResults = [];
     currentResults = parseCourses(output);
     output = JSON.stringify(output);
@@ -234,21 +246,36 @@ async function displaySearchResults(index){
         pageIndex = pageIndex -1;
         displaySearchResults(pageIndex);
     } else {
-        document.getElementById("courseSearch").innerText = JSON.stringify(printCourseResults(JSON.parse(output)))  ;
+
+        let out = JSON.parse(output);
+
+        let table = `
+        <tr>
+          <th>Course Code</th>
+          <th>Campus</th>
+          <th>Term</th>
+        </tr>`;
+        for (let i=0; i<out.length; i++){
+            table += '<tr> <td>'+ out[i].code +'</td> <td>'+out[i].campus+'</td><td>'+out[i].term+'</td></tr>'
+        }
+        document.getElementById("searchResults").innerHTML = table;
     }
 }
 
 document.getElementById("searchGo").addEventListener("click", function(){
     pageIndex = 1;
     displaySearchResults(pageIndex);
+
 });
 
-document.getElementById("resultsNext").addEventListener("click", function(){
+document.getElementById("resultsPrev").addEventListener("click", function(){
     pageIndex = pageIndex + 1;
     displaySearchResults(pageIndex);
 });
 
-document.getElementById("resultsPrev").addEventListener("click", function(){
+document.getElementById("resultsNext").addEventListener("click", function(){
     if (pageIndex !== 1) pageIndex = pageIndex -1;
     displaySearchResults(pageIndex);
 });
+
+
